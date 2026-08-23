@@ -1,0 +1,1 @@
+{"name":"medvault-v14-beta","version":"0.14.0","private":true,"scripts":{"android":"npx cap sync android"},"dependencies":{"@capacitor/core":"^7.4.0","@capacitor/android":"^7.4.0","@capacitor/cli":"^7.4.0"}}

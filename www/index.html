@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#07111c">
+<title>MedVault v14</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#07111c;color:#eef6ff}
+header{padding:20px;border-bottom:1px solid #203548}
+h1{margin:0 0 6px;font-size:28px}
+.sub{color:#91a8ba}
+main{padding:18px;max-width:900px;margin:auto}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.card{background:#0d1d2b;border:1px solid #294056;border-radius:16px;padding:18px;min-height:120px}
+.card b{display:block;font-size:17px;margin-bottom:8px}
+.status{font-size:13px;color:#7ee2a8}
+button{border:0;border-radius:10px;padding:12px 16px;background:#1769aa;color:white;font-weight:700}
+section{margin-bottom:22px}
+</style>
+</head>
+<body>
+<header>
+<h1>MedVault</h1>
+<div class="sub">Private Medical Research Workspace · v14 Beta</div>
+</header>
+
+<main>
+<section>
+<h2>Workspace Command Center</h2>
+<div class="sub">One research workspace connecting every module.</div>
+</section>
+
+<section class="grid">
+<div class="card"><b>📷 Scan System</b><span class="status">Connected</span></div>
+<div class="card"><b>🧠 Question / PICO</b><span class="status">Connected</span></div>
+<div class="card"><b>🔗 Boolean Builder</b><span class="status">Connected</span></div>
+<div class="card"><b>📚 Evidence</b><span class="status">Connected</span></div>
+<div class="card"><b>🔎 Screening</b><span class="status">Connected</span></div>
+<div class="card"><b>⚖️ Risk of Bias</b><span class="status">Connected</span></div>
+<div class="card"><b>📊 Synthesis</b><span class="status">Connected</span></div>
+<div class="card"><b>🧪 3D Drug Development</b><span class="status">Connected</span></div>
+</section>
+
+<section class="card">
+<h2>Active Workspace</h2>
+<p id="workspace">No workspace loaded yet.</p>
+<button onclick="createWorkspace()">Create Workspace</button>
+</section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
