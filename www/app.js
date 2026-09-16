@@ -1,309 +1,467 @@
-const STORAGE_KEY = "medvault_v14_workspace";
+const KEY="medvault_nexus_v1";
 
-let workspace = {
-  id: "ws_" + Date.now(),
-  name: "Untitled Workspace",
-  description: "",
-  pico: { p: "", i: "", c: "", o: "" },
-  booleanQuery: "",
-  studies: [],
-  screening: {},
-  extractions: {},
-  bias: {},
-  synthesis: {}
+const defaultState={
+  page:"home",
+
+  workspace:{
+    name:"MedVault Nexus Workspace",
+    question:"",
+    pico:{
+      P:"",
+      I:"",
+      C:"",
+      O:""
+    }
+  },
+
+  searches:[],
+
+  messages:[]
 };
 
-function showSection(sectionId) {
-  // Hide all sections
-  document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-  
-  // Show selected section
-  document.getElementById(sectionId).classList.add("active");
-  
-  // Update header
-  const titles = {
-    dashboard: "Dashboard",
-    workspace: "Workspace Settings",
-    question: "Research Question",
-    boolean: "Search Strategy",
-    evidence: "Import Studies",
-    screening: "Screen Studies",
-    extraction: "Extract Data",
-    bias: "Risk of Bias",
-    synthesis: "Synthesis",
-    drug: "Drug Development"
-  };
-  
-  document.getElementById("section-title").textContent = titles[sectionId] || "MedVault";
-  closeSidebar();
-}
+let state=load();
 
-function toggleSidebar() {
-  document.getElementById("sidebar").classList.toggle("active");
-}
+function load(){
 
-function closeSidebar() {
-  document.getElementById("sidebar").classList.remove("active");
-}
+  try{
 
-function openWorkspaceModal() {
-  document.getElementById("workspaceModal").classList.add("active");
-}
+    return JSON.parse(
+      localStorage.getItem(KEY)
+    ) || defaultState;
 
-function closeWorkspaceModal() {
-  document.getElementById("workspaceModal").classList.remove("active");
-}
+  }catch{
 
-function createWorkspace() {
-  const name = document.getElementById("new-ws-name").value.trim();
-  const desc = document.getElementById("new-ws-desc").value.trim();
-  
-  if (!name) {
-    alert("Workspace name is required");
-    return;
+    return defaultState;
+
   }
-  
-  workspace = {
-    id: "ws_" + Date.now(),
-    name: name,
-    description: desc,
-    pico: { p: "", i: "", c: "", o: "" },
-    booleanQuery: "",
-    studies: [],
-    screening: {},
-    extractions: {},
-    bias: {},
-    synthesis: {}
-  };
-  
-  saveWorkspace();
-  closeWorkspaceModal();
+
+}
+
+function save(){
+
+  localStorage.setItem(
+    KEY,
+    JSON.stringify(state)
+  );
+
+}
+
+function esc(value=""){
+
+  return String(value).replace(
+    /[&<>"']/g,
+    c=>({
+      "&":"&amp;",
+      "<":"&lt;",
+      ">":"&gt;",
+      '"':"&quot;",
+      "'":"&#39;"
+    }[c])
+  );
+
+}
+
+function navigate(page){
+
+  state.page=page;
+
+  save();
+
   render();
-  showSection("dashboard");
+
 }
 
-function updateWorkspace() {
-  workspace.name = document.getElementById("ws-name").value;
-  workspace.description = document.getElementById("ws-desc").value;
-  saveWorkspace();
-  alert("Workspace updated!");
+function render(){
+
+  document
+    .querySelectorAll("aside button")
+    .forEach(button=>{
+
+      button.classList.toggle(
+        "active",
+        button.dataset.page===state.page
+      );
+
+    });
+
+  const app=
+    document.getElementById("app");
+
+  if(state.page==="home")
+    app.innerHTML=home();
+
+  if(state.page==="workspace")
+    app.innerHTML=workspace();
+
+  if(state.page==="research")
+    app.innerHTML=research();
+
+  if(state.page==="assistant")
+    app.innerHTML=assistant();
+
+  bind();
+
 }
 
-function saveWorkspace() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(workspace));
-}
+function home(){
 
-function loadWorkspace() {
-  const saved = localStorage.getItem(STORAGE_KEY);
-  if (saved) {
-    try {
-      workspace = JSON.parse(saved);
-    } catch (e) {
-      console.error("Failed to load workspace:", e);
-    }
-  }
-}
+  return `
 
-function savePICO() {
-  workspace.pico = {
-    p: document.getElementById("pico-p").value,
-    i: document.getElementById("pico-i").value,
-    c: document.getElementById("pico-c").value,
-    o: document.getElementById("pico-o").value
-  };
-  
-  saveWorkspace();
-  
-  const picoDisplay = document.getElementById("pico-display");
-  const picoText = document.getElementById("pico-text");
-  picoText.textContent = `In ${workspace.pico.p}, does ${workspace.pico.i} compared to ${workspace.pico.c} result in ${workspace.pico.o}?`;
-  picoDisplay.style.display = "block";
-}
+  <div class="hero">
 
-function executeSearch() {
-  workspace.booleanQuery = document.getElementById("boolean-query").value;
-  saveWorkspace();
-  alert("Search strategy saved!\nIn a real system, this would query PubMed, Scopus, etc.");
-}
+    <h1>MedVault Nexus</h1>
 
-function addDemoStudy() {
-  const study = {
-    id: "study_" + Date.now(),
-    title: "Efficacy of metformin on glycemic control in type 2 diabetes patients",
-    authors: "Smith et al.",
-    year: 2023,
-    abstract: "A randomized controlled trial conducted in 2023 examining the effects of metformin versus placebo on HbA1c reduction over 12 weeks in 250 participants.",
-    status: "pending"
-  };
-  
-  workspace.studies.push(study);
-  saveWorkspace();
-  renderStudiesList();
-}
-
-function renderStudiesList() {
-  const list = document.getElementById("studies-list");
-  list.innerHTML = "";
-  
-  workspace.studies.forEach((study, index) => {
-    const item = document.createElement("div");
-    item.className = "study-item";
-    item.innerHTML = `
-      <h4>${study.title}</h4>
-      <p>${study.authors}, ${study.year}</p>
-      <p style="margin-top: 8px; font-size: 12px;">${study.abstract}</p>
-    `;
-    list.appendChild(item);
-  });
-}
-
-function renderScreening() {
-  const container = document.getElementById("screening-container");
-  container.innerHTML = "";
-  
-  if (workspace.studies.length === 0) {
-    container.innerHTML = "<p style='color: #888;'>No studies to screen. Import studies first.</p>";
-    return;
-  }
-  
-  workspace.studies.forEach((study, index) => {
-    const card = document.createElement("div");
-    card.className = "screening-card";
-    
-    const status = workspace.screening[study.id] || "pending";
-    const statusColor = status === "included" ? "#22c55e" : status === "excluded" ? "#ef4444" : "#f59e0b";
-    
-    card.innerHTML = `
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between;">
-        <span>Study ${index + 1} of ${workspace.studies.length}</span>
-        <span style="color: ${statusColor};">${status.toUpperCase()}</span>
-      </div>
-      <h3>${study.title}</h3>
-      <p><strong>${study.authors}, ${study.year}</strong></p>
-      <p>${study.abstract}</p>
-      <div class="screening-actions">
-        <button class="exclude" onclick="screenStudy('${study.id}', 'excluded')">Exclude</button>
-        <button class="maybe" onclick="screenStudy('${study.id}', 'maybe')">Maybe</button>
-        <button class="include" onclick="screenStudy('${study.id}', 'included')">Include</button>
-      </div>
-    `;
-    
-    container.appendChild(card);
-  });
-  
-  renderProgress();
-}
-
-function screenStudy(studyId, decision) {
-  workspace.screening[studyId] = decision;
-  saveWorkspace();
-  renderScreening();
-}
-
-function saveExtraction() {
-  const author = document.getElementById("extract-author").value;
-  const n = document.getElementById("extract-n").value;
-  const outcome = document.getElementById("extract-outcome").value;
-  
-  workspace.extractions = { author, n, outcome };
-  saveWorkspace();
-  alert("Extraction saved!");
-}
-
-function saveBias() {
-  workspace.bias = {
-    selection: document.getElementById("bias-selection").value,
-    performance: document.getElementById("bias-performance").value
-  };
-  saveWorkspace();
-  alert("Bias assessment saved!");
-}
-
-function performSynthesis() {
-  workspace.synthesis = {
-    method: document.getElementById("synthesis-method").value,
-    model: document.getElementById("synthesis-model").value
-  };
-  saveWorkspace();
-  
-  const resultsDiv = document.getElementById("synthesis-results");
-  const resultsText = document.getElementById("synthesis-text");
-  resultsText.innerHTML = `
-    <strong>Method:</strong> ${workspace.synthesis.method}<br>
-    <strong>Model:</strong> ${workspace.synthesis.model}<br>
-    <strong>Included Studies:</strong> ${Object.values(workspace.screening).filter(s => s === "included").length}<br>
-    <strong>Overall Effect Size:</strong> -1.2 (95% CI: -1.5 to -0.9) <em>(Example)</em>
-  `;
-  resultsDiv.style.display = "block";
-}
-
-function loadMolecule() {
-  alert("Drug Development: 3D molecule viewer would render here. Integrate with RDKit.js or similar.");
-}
-
-function renderProgress() {
-  const total = workspace.studies.length;
-  const included = Object.values(workspace.screening).filter(s => s === "included").length;
-  const excluded = Object.values(workspace.screening).filter(s => s === "excluded").length;
-  const completed = included + excluded;
-  
-  const percentage =
-    Math.round(
-      completed / total * 100
-    );
-  
-  const progressHTML = `
-    <div style="margin-top: 20px; padding: 16px; background: #252d3d; border-radius: 8px;">
-      <p><strong>Screening Progress</strong></p>
-      <p>${completed} of ${total} screened (${percentage}%)</p>
-      <div class="progress-bar">
-        <div class="progress-fill" style="width: ${percentage}%"></div>
-      </div>
-      <p style="font-size: 12px; color: #888; margin-top: 8px;">
-        Included: ${included} | Excluded: ${excluded}
-      </p>
+    <div class="muted">
+      Medical research workspace — Version 1
     </div>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>Workspace</h3>
+        <b>1</b>
+        <div class="muted">
+          active workspace
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Research</h3>
+        <b>${state.searches.length}</b>
+        <div class="muted">
+          saved searches
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>AI</h3>
+        <b>${state.messages.length}</b>
+        <div class="muted">
+          messages
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <div class="grid">
+
+    <div class="card">
+      <h3>v1 Foundation</h3>
+
+      <div class="muted">
+        Secure-first foundation for the future
+        MedVault platform.
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <h3>Roadmap</h3>
+
+      <div class="muted">
+        Advanced evidence, screening,
+        3D drug development and additional
+        modules can be added in future versions.
+      </div>
+
+    </div>
+
+  </div>
+
   `;
-  
-  document.getElementById("screening-container").innerHTML += progressHTML;
+
 }
 
-function render() {
-  // Update workspace display
-  const wsInfo = document.getElementById("workspace-info");
-  const wsName = document.getElementById("workspace-name");
-  const wsStats = document.getElementById("workspace-stats");
-  
-  wsName.textContent = workspace.name;
-  wsStats.innerHTML = `
-    Studies: ${workspace.studies.length} |
-    Screened: ${Object.keys(workspace.screening).length} |
-    Risk Assessments: ${Object.keys(workspace.bias).length || 0}
+function workspace(){
+
+  const p=state.workspace.pico;
+
+  return `
+
+  <div class="hero">
+
+    <h1>Workspace</h1>
+
+    <input
+      id="name"
+      value="${esc(state.workspace.name)}"
+      placeholder="Workspace name"
+    >
+
+    <textarea
+      id="question"
+      rows="5"
+      placeholder="Enter your medical research question"
+    >${esc(state.workspace.question)}</textarea>
+
+    <div class="grid">
+
+      <input
+        id="P"
+        value="${esc(p.P)}"
+        placeholder="Population"
+      >
+
+      <input
+        id="I"
+        value="${esc(p.I)}"
+        placeholder="Intervention"
+      >
+
+      <input
+        id="C"
+        value="${esc(p.C)}"
+        placeholder="Comparison"
+      >
+
+      <input
+        id="O"
+        value="${esc(p.O)}"
+        placeholder="Outcome"
+      >
+
+    </div>
+
+    <button
+      class="action"
+      id="saveWorkspace"
+    >
+      Save Workspace
+    </button>
+
+  </div>
+
   `;
-  
-  // Load workspace settings form
-  document.getElementById("ws-name").value = workspace.name;
-  document.getElementById("ws-desc").value = workspace.description;
-  
-  // Load PICO
-  document.getElementById("pico-p").value = workspace.pico.p;
-  document.getElementById("pico-i").value = workspace.pico.i;
-  document.getElementById("pico-c").value = workspace.pico.c;
-  document.getElementById("pico-o").value = workspace.pico.o;
-  
-  if (workspace.pico.p) {
-    const picoDisplay = document.getElementById("pico-display");
-    picoDisplay.style.display = "block";
-    document.getElementById("pico-text").textContent = `In ${workspace.pico.p}, does ${workspace.pico.i} compared to ${workspace.pico.c} result in ${workspace.pico.o}?`;
-  }
-  
-  // Load studies
-  renderStudiesList();
-  renderScreening();
+
 }
 
-// Initialize
-document.addEventListener("DOMContentLoaded", function() {
-  loadWorkspace();
-  render();
-});
+function research(){
+
+  return `
+
+  <div class="hero">
+
+    <h1>Research</h1>
+
+    <div class="muted">
+      Build and save a basic reproducible
+      research query.
+    </div>
+
+    <textarea
+      id="researchQuestion"
+      rows="5"
+      placeholder="Example: effect of metformin on type 2 diabetes"
+    >${esc(state.workspace.question)}</textarea>
+
+    <button
+      class="action"
+      id="generate"
+    >
+      Generate Search Query
+    </button>
+
+    <div
+      class="output"
+      id="queryOutput"
+    >
+      No query generated.
+    </div>
+
+    <div class="grid">
+
+      ${state.searches.map(
+        (s,i)=>`
+
+        <div class="card">
+
+          <b>Search ${i+1}</b>
+
+          <div class="muted">
+            ${esc(s)}
+          </div>
+
+        </div>
+
+        `
+      ).join("")}
+
+    </div>
+
+  </div>
+
+  `;
+
+}
+
+function assistant(){
+
+  return `
+
+  <div class="hero">
+
+    <h1>AI Assistant</h1>
+
+    <div class="muted">
+
+      Secure AI integration point.
+      API credentials must remain on the server.
+
+    </div>
+
+    <textarea
+      id="message"
+      rows="5"
+      placeholder="Ask a medical research question"
+    ></textarea>
+
+    <button
+      class="action"
+      id="send"
+    >
+      Send
+    </button>
+
+    <div class="output">
+
+      ${
+        state.messages.map(
+          m=>`
+
+          <div>
+
+            <b>You:</b>
+            ${esc(m)}
+
+            <br>
+
+            <span class="muted">
+              Secure AI backend connection
+              will be added through the server.
+            </span>
+
+          </div>
+
+          <hr>
+
+          `
+        ).join("")
+        || "No messages yet."
+      }
+
+    </div>
+
+  </div>
+
+  `;
+
+}
+
+function bind(){
+
+  document
+    .querySelectorAll("aside button")
+    .forEach(button=>{
+
+      button.onclick=
+        ()=>navigate(button.dataset.page);
+
+    });
+
+  document
+    .getElementById("saveWorkspace")
+    ?.addEventListener(
+      "click",
+      ()=>{
+
+        state.workspace.name=
+          document.getElementById("name").value;
+
+        state.workspace.question=
+          document.getElementById("question").value;
+
+        ["P","I","C","O"].forEach(k=>{
+
+          state.workspace.pico[k]=
+            document.getElementById(k).value;
+
+        });
+
+        save();
+
+        alert("Workspace saved.");
+
+      }
+    );
+
+  document
+    .getElementById("generate")
+    ?.addEventListener(
+      "click",
+      ()=>{
+
+        const question=
+          document
+          .getElementById("researchQuestion")
+          .value
+          .trim();
+
+        state.workspace.question=
+          question;
+
+        const query=
+          question
+          .split(/\s+/)
+          .filter(Boolean)
+          .map(
+            x=>`"${x.replace(/[.,!?]/g,"")}"`
+          )
+          .join(" AND ");
+
+        state.searches.push(query);
+
+        save();
+
+        document
+          .getElementById("queryOutput")
+          .textContent=
+          query || "Enter a question first.";
+
+      }
+    );
+
+  document
+    .getElementById("send")
+    ?.addEventListener(
+      "click",
+      ()=>{
+
+        const msg=
+          document
+          .getElementById("message")
+          .value
+          .trim();
+
+        if(!msg)return;
+
+        state.messages.push(msg);
+
+        save();
+
+        render();
+
+      }
+    );
+
+}
+
+window.MedVault={
+  getState:()=>state,
+  save,
+  navigate
+};
+
+render();

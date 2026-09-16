@@ -1,1 +1,6 @@
-{"appId":"com.medvault.research","appName":"MedVault","webDir":"www","bundledWebRuntime":false}
+module.exports={
+  appId:"com.medvault.nexus",
+  appName:"MedVault Nexus",
+  webDir:".",
+  bundledWebRuntime:false
+};
